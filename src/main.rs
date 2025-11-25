@@ -16,93 +16,76 @@ impl Config {
     }
 }
 
+#[derive(Debug)]
 enum Instruction {
     Add (i32, i32, i32),
     Sub (i32, i32, i32),
     Mul (i32, i32, i32),
 }
 
+#[derive(Debug)]
 enum Label {
-    string (String),
-    number (i32),
+    Str(String),
+    Num(i32),
 }
 
 impl Instruction {
-    fn parse_line(registers_string: &String) -> Result<(&str, Vec<Label>), &str> {
-        let mut name: &str;
-        let mut init = 0;
-        let mut last = 0;
-        while last < registers_string.len() { 
-            if registers_string.as_bytes()[last] == b' ' {
-                name = &registers_string[init..last];
-            }
-            last += 1;
+    fn parse_line(line: &str) -> Result<Instruction, String> {
+        let tokens: Vec<&str> = line.split(|c| c == ' ' || c == ',').filter(|s| !s.is_empty()).collect();
+        if tokens.is_empty() {
+            return Err("Linha vazia".into());
         }
-        let mut regs: Vec<Label> = vec!();
-        while last < registers_string.len() {
-            if registers_string.as_bytes()[last] == b',' {
-                match registers_string[init..last].parse::<i32>() {
-                    Ok(num) => regs.push(Label::number(num)),
-                    Err(_) => regs.push(Label::string(registers_string[init..last].to_string())),
-                }
-                init = last + 1;
-                last = init;
-            }
-            last += 1;
-        }
-        match registers_string[init..last].parse::<i32>() {
-            Ok(num) => regs.push(Label::number(num)),
-            Err(_) => regs.push(Label::string(registers_string[init..last].to_string())),
-        }
-        Ok((name, regs))
-    }
 
-    pub fn new(s_line: &String, idx_line: i32) -> Result<Instruction, &str> {
-        let (name, regs) = Self::parse_line(s_line).unwrap();
-        let instruction: Instruction;
-        match name {
-            "add" => {
-                if regs.len() != 3 { return Err("Instrução add na linha {idx_line} errada!") }
-                instruction = Instruction::Add(regs[0], regs[1], regs[2]);
-                
-            },
-            "sub" => {
-                if regs.len() != 3 { return Err("Instrução sub na linha {idx_line} errada!") }
-                instruction = Instruction::Sub(regs[0], regs[1], regs[2]);
-            },
-            "mul" => {
-                if regs.len() != 3 { return Err("Instrução mul na linha {idx_line} errada!") }
-                instruction = Instruction::Mul(regs[0], regs[1], regs[2]);
-            },
+        let name = tokens[0];
+        let mut regs = Vec::new();
+        for tok in &tokens[1..] {
+            match tok.parse::<i32>() {
+                Ok(n) => regs.push(n),
+                Err(_) => return Err(format!("Argumento inválido: {}", tok)),
+            }
         }
-        Ok(instruction)
+        
+        if regs.len() != 3 {
+            return Err(format!("Instrução {} precisa de 3 argumentos", name))
+        }
+
+        let instr = match name {
+            "add" => Instruction::Add(regs[0], regs[1], regs[2]),
+            "sub" => Instruction::Sub(regs[0], regs[1], regs[2]),
+            "mul" => Instruction::Mul(regs[0], regs[1], regs[2]),
+            _ => return Err(format!("Instrução {} desconhecida", name)),
+        };
+
+        Ok(instr)
     }
 }
 
-fn parser(code: &String) {
-    let mut init = 0;
-    let mut last = 0;
-    let mut curr_line: &str;
-    let registers_string;
-    let tokens: Vec<Instruction>;
-    let mut idx_line = 0;
-    for i in 0..code.len() {
-        if code[i] == '\n' {
-            last = i - 1;
-            curr_line = &code[init..last];
-            tokens.push(Instruction::new(curr_line, idx_line));
-            idx_line += 1;
-            init = i + 1;
+fn parser(code: &str) -> Vec<Instruction> {
+    let mut result = Vec::new();
+    
+    for (idx, line) in code.lines().enumerate() {
+        if line.trim().is_empty() {
+            continue;
+        }
+
+        match Instruction::parse_line(line) {
+            Ok(instr) => result.push(instr),
+            Err(e) => println!("Erro na linha {}: {}", idx + 1, e),
         }
     }
+
+    result
 }
 
 fn main() {
     let args: Vec<String> = env::args().collect();
     let config = Config::new(&args);
 
-    let contents = fs::read_to_string(config.file_path).expect("Should have been able to read this file");
-
-    parser(&contents);
-    println!("With text:\n{contents}");
+    let contents = fs::read_to_string(config.file_path).expect("Erro lendo o arquivo");
+    
+    let instructions = parser(&contents);
+    println!("Instruções encontradas:");
+    for instr in instructions {
+        println!("{:?}", instr);
+    }
 }
