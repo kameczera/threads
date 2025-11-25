@@ -2,7 +2,6 @@ use std::env;
 use std::fs;
 
 
-// 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
 struct Config {
     query: String,
     file_path: String,
@@ -18,9 +17,9 @@ impl Config {
 }
 
 enum Instruction {
-    add (i32, i32, i32),
-    sub (i32, i32, i32),
-    mul (i32, i32, i32),
+    Add (i32, i32, i32),
+    Sub (i32, i32, i32),
+    Mul (i32, i32, i32),
 }
 
 enum Label {
@@ -29,33 +28,52 @@ enum Label {
 }
 
 impl Instruction {
-    fn parse_reg(registers_string: &str) -> Result<(&str, Vec<Label>), &str> {
-        let regs: Vec<Label> = vec!();
+    fn parse_line(registers_string: &String) -> Result<(&str, Vec<Label>), &str> {
+        let mut name: &str;
         let mut init = 0;
         let mut last = 0;
-        while i < registers_string.len() {
-            if registers_string[i] == ',' {
+        while last < registers_string.len() { 
+            if registers_string.as_bytes()[last] == b' ' {
+                name = &registers_string[init..last];
+            }
+            last += 1;
+        }
+        let mut regs: Vec<Label> = vec!();
+        while last < registers_string.len() {
+            if registers_string.as_bytes()[last] == b',' {
                 match registers_string[init..last].parse::<i32>() {
                     Ok(num) => regs.push(Label::number(num)),
-                    Err(_) => regs.push(Label::string(registers_string[init..last].clone())),
+                    Err(_) => regs.push(Label::string(registers_string[init..last].to_string())),
                 }
+                init = last + 1;
+                last = init;
             }
-            i += 1;
+            last += 1;
         }
-        Ok(regs)
+        match registers_string[init..last].parse::<i32>() {
+            Ok(num) => regs.push(Label::number(num)),
+            Err(_) => regs.push(Label::string(registers_string[init..last].to_string())),
+        }
+        Ok((name, regs))
     }
 
-    pub fn new(s_line: &str, idx_line: i32) -> Result<Instruction, &str> {
-        let regs = parse_line(s_line).unwrap();
+    pub fn new(s_line: &String, idx_line: i32) -> Result<Instruction, &str> {
+        let (name, regs) = Self::parse_line(s_line).unwrap();
         let instruction: Instruction;
         match name {
             "add" => {
-                if regs.len() != 3 { return Err("Instrução linha {idx_line} errado!") }
-                instruction = Instruction::add(regs[0], regs[1], regs[2])
+                if regs.len() != 3 { return Err("Instrução add na linha {idx_line} errada!") }
+                instruction = Instruction::Add(regs[0], regs[1], regs[2]);
                 
             },
-            "sub" => instruction = Instruction::sub(regs[0], regs[1], regs[2]),
-            "mul" => instruction = Instruction::mul(regs[0], regs[1], regs[2]),
+            "sub" => {
+                if regs.len() != 3 { return Err("Instrução sub na linha {idx_line} errada!") }
+                instruction = Instruction::Sub(regs[0], regs[1], regs[2]);
+            },
+            "mul" => {
+                if regs.len() != 3 { return Err("Instrução mul na linha {idx_line} errada!") }
+                instruction = Instruction::Mul(regs[0], regs[1], regs[2]);
+            },
         }
         Ok(instruction)
     }
@@ -85,6 +103,6 @@ fn main() {
 
     let contents = fs::read_to_string(config.file_path).expect("Should have been able to read this file");
 
-    parser(contents);
+    parser(&contents);
     println!("With text:\n{contents}");
 }
