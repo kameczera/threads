@@ -18,9 +18,21 @@ impl Config {
 
 #[derive(Debug)]
 enum Instruction {
-    Add (i32, i32, i32),
-    Sub (i32, i32, i32),
-    Mul (i32, i32, i32),
+    Add (usize, usize, usize),
+    Sub (usize, usize, usize),
+    Mul (usize, usize, usize),
+    Addi (usize, usize, i32),
+    Muli (usize, usize, i32),
+}
+
+fn exec_instruction(instr: &Instruction, memory: &mut [i32; 32]) {
+    match instr {
+        Instruction::Add(reg1, reg2, reg3) =>  memory[*reg1] = memory[*reg2] + memory[*reg3],
+        Instruction::Sub(reg1, reg2, reg3) =>  memory[*reg1] = memory[*reg2] - memory[*reg3],
+        Instruction::Mul(reg1, reg2, reg3) =>  memory[*reg1] = memory[*reg2] * memory[*reg3],
+        Instruction::Addi(reg1, reg2, value) => memory[*reg1] = memory[*reg2] + value,
+        Instruction::Muli(reg1, reg2, value) => memory[*reg1] = memory[*reg2] * value,
+    }
 }
 
 #[derive(Debug)]
@@ -50,9 +62,11 @@ impl Instruction {
         }
 
         let instr = match name {
-            "add" => Instruction::Add(regs[0], regs[1], regs[2]),
-            "sub" => Instruction::Sub(regs[0], regs[1], regs[2]),
-            "mul" => Instruction::Mul(regs[0], regs[1], regs[2]),
+            "add" => Instruction::Add(regs[0] as usize, regs[1] as usize, regs[2] as usize),
+            "addi" => Instruction::Addi(regs[0] as usize, regs[1] as usize, regs[2] as i32),
+            "sub" => Instruction::Sub(regs[0] as usize, regs[1] as usize, regs[2] as usize),
+            "mul" => Instruction::Mul(regs[0] as usize, regs[1] as usize, regs[2] as usize),
+            "muli" => Instruction::Muli(regs[0] as usize, regs[1] as usize, regs[2] as i32),
             _ => return Err(format!("Instrução {} desconhecida", name)),
         };
 
@@ -77,6 +91,16 @@ fn parser(code: &str) -> Vec<Instruction> {
     result
 }
 
+fn interpreter(instructions: &Vec<Instruction>) {
+    let mut memory: [i32; 32] = [0; 32];
+    for instr in instructions {
+        exec_instruction(instr, &mut memory);
+    }
+    for data in memory {
+    println!("{} ", data);
+    }
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     let config = Config::new(&args);
@@ -84,8 +108,9 @@ fn main() {
     let contents = fs::read_to_string(config.file_path).expect("Erro lendo o arquivo");
     
     let instructions = parser(&contents);
+    interpreter(&instructions);
     println!("Instruções encontradas:");
     for instr in instructions {
-        println!("{:?}", instr);
+        println!("{:?}", instr)
     }
 }
