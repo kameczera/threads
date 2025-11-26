@@ -2,9 +2,9 @@ use crate::instruction::Instruction;
 use crate::instruction::exec_instruction;
 
 pub struct Program {
-    instructions: Vec<Instruction>,
-    idx_instr: u32,
-    memory: [i32; 32],
+    pub instructions: Vec<Instruction>,
+    pub idx_instr: u32,
+    pub memory: [i32; 32],
 }
 
 impl Program {

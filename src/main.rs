@@ -7,6 +7,7 @@ mod program;
 
 use instruction::Instruction;
 use program::Program;
+use crate::cpu::Cpu;
 
 struct Config {
     query: String,
@@ -28,6 +29,10 @@ fn main() {
 
     let contents = fs::read_to_string(config.file_path).expect("Erro lendo o arquivo");
     let program = Program::new(&contents);
-
-    
+    let mut programs: Vec<Program> = Vec::new();
+    programs.push(program);
+    let mut cpu = Cpu::new(programs);
+    while cpu.is_finished == false {
+        cpu.move_pipeline();
+    }
 }
