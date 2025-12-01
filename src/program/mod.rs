@@ -1,9 +1,10 @@
 use crate::instruction::Instruction;
 use crate::instruction::exec_instruction;
 
+#[derive(Debug)]
 pub struct Program {
     pub instructions: Vec<Instruction>,
-    pub idx_instr: u32,
+    pub idx_instr: usize,
     pub memory: [i32; 32],
 }
 
