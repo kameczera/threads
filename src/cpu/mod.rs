@@ -35,7 +35,7 @@ impl Cpu {
         // mudar quando adicionar jump
         let mut curr_program = &mut self.programs[self.schedule];
         let first = curr_program.instructions[curr_program.idx_instr];
-        mem::replace(&mut self.pipeline[0], Box::new(first));
+        let _ = mem::replace(&mut self.pipeline[0], Box::new(first));
         curr_program.idx_instr += 1;
         if curr_program.is_finished() {
             self.programs.remove(self.schedule);
@@ -45,15 +45,30 @@ impl Cpu {
     }
 
     pub fn move_pipeline(&mut self) {  
-        // arrastar instruções já executadas 
+        // arrastar instruções já executadas
+        let mut dependencies: Vec<usize> = Vec::new();
         for i in (3..=4).rev() {
             self.move_instruction(i);
+            let curr_program = &self.programs[self.schedule];
+            match curr_program.instructions[curr_program.idx_instr].get_w_register() {
+                Some(r) => dependencies.push(r),
+                None => (),
+            }
         }
 
         let has_moved = match &*self.pipeline[2] {
-            Instruction::Add(_, _, _) => { 
-                self.move_instruction(2);
-                true
+            Instruction::Add(r, _, _) => {
+                let mut found = false;
+                for dependency in &dependencies {
+                    if dependency == r {
+                        self.counter_bubble += 1;
+                        self.move_instruction(2);
+                        found = true;
+                        break;
+                    }
+                }
+
+                found
             }
             _ => {
                 self.move_instruction(2);
@@ -79,7 +94,6 @@ impl Cpu {
                 return;
             }
         }
-
         self.print_pipeline();
     }
 

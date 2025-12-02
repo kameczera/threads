@@ -58,7 +58,14 @@ impl Instruction {
         Ok(instr)
     }
 
-    pub fn exec_instruction(&mut self) {
-        
+    pub fn get_w_register(&self) -> Option<usize> {
+        match self {
+           Instruction::Noop => None,
+           Instruction::Add(r, _, _) 
+            | Instruction::Addi(r, _, _)
+            | Instruction::Sub(r, _, _)
+            | Instruction::Mul(r, _, _)
+            | Instruction::Muli(r, _, _) => Some(*r),
+        }
     }
 }
