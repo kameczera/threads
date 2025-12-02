@@ -35,14 +35,13 @@ impl Cpu {
         // mudar quando adicionar jump
         let mut curr_program = &mut self.programs[self.schedule];
         let first = curr_program.instructions[curr_program.idx_instr];
-        curr_program.idx_instr += 1;
-        println!("{:?}", first);
-        // implementar futuramente scheduler
-        // self.schedule();
         mem::replace(&mut self.pipeline[0], Box::new(first));
-        if curr_program.instructions.is_empty() {
+        curr_program.idx_instr += 1;
+        if curr_program.is_finished() {
             self.programs.remove(self.schedule);
         }
+        // implementar futuramente scheduler
+        // self.schedule();
     }
 
     pub fn move_pipeline(&mut self) {  
@@ -65,7 +64,6 @@ impl Cpu {
         if has_moved {
             for i in (0..=1).rev() {
                 self.move_instruction(i);
-                println!("{}", i);
             }
             if self.programs.is_empty() {
                 self.is_finished = true;
@@ -83,8 +81,6 @@ impl Cpu {
         }
 
         self.print_pipeline();
-        let one_sec = time::Duration::from_millis(1000);
-        thread::sleep(one_sec);
     }
 
     pub fn print_pipeline(&self) {

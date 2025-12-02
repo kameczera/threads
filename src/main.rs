@@ -34,6 +34,5 @@ fn main() {
     let mut cpu = Cpu::new(programs);
     while cpu.is_finished == false {
         cpu.move_pipeline();
-        println!("{:?}", cpu.programs);
     }
 }

@@ -31,8 +31,15 @@ impl Program {
         for mut instr in &self.instructions {
             exec_instruction(&mut instr, &mut self.memory);
         }
-        for data in self.memory {
-            println!("{} ", data);
+        // for data in self.memory {
+        //     println!("{} ", data);
+        // }
+    }
+
+    pub fn is_finished(&self) -> bool {
+        if self.instructions.len() <= self.idx_instr {
+            return true;
         }
+        false
     }
 }

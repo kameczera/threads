@@ -57,4 +57,8 @@ impl Instruction {
 
         Ok(instr)
     }
+
+    pub fn exec_instruction(&mut self) {
+        
+    }
 }
