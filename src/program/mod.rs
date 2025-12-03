@@ -37,7 +37,7 @@ impl Program {
     }
 
     pub fn is_finished(&self) -> bool {
-        if self.instructions.len() <= self.idx_instr {
+        if self.instructions.len() < self.idx_instr {
             return true;
         }
         false

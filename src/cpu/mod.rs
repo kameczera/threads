@@ -85,14 +85,13 @@ impl Cpu {
             }
         }
 
-        if let Instruction::Noop = *self.pipeline[0] {
-            if !self.programs.is_empty() {
+        if let Instruction::Noop = *self.pipeline[0] && !self.programs.is_empty() {
                 self.add_instruction_to_pipeline();
-            } else {
-                self.is_finished = true;
-                self.print_pipeline();
-                return;
             }
+        } else {
+            self.is_finished = true;
+            self.print_pipeline();
+            return;
         }
         self.print_pipeline();
     }
